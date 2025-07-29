@@ -11,48 +11,26 @@ resource "aws_vpc" "main" {
   }
 }
 
-resource "aws_subnet" "public_1" {
+resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
+  for_each                = var.public_subnets
+  cidr_block              = each.value.cidr
+  availability_zone       = each.value.az
   map_public_ip_on_launch = true
-  availability_zone       = "us-east-1a"
 
   tags = {
-    Name = "public-1"
+    Name = "public-${each.key}"
   }
 }
 
-
-resource "aws_subnet" "public_2" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.2.0/24"
-  map_public_ip_on_launch = true
-  availability_zone       = "us-east-1b"
-
-
-  tags = {
-    Name = "public-2"
-  }
-}
-
-resource "aws_subnet" "private_1" {
+resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "us-east-1c"
+  for_each          = var.private_subnets
+  cidr_block        = each.value.cidr
+  availability_zone = each.value.az
 
   tags = {
-    Name = "private-1"
-  }
-}
-
-
-resource "aws_subnet" "private_2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.4.0/24"
-  availability_zone = "us-east-1d"
-
-  tags = {
-    Name = "private-2"
+    Name = "private-${each.key}"
   }
 }
 
@@ -80,15 +58,14 @@ resource "aws_route" "internet_route" {
   destination_cidr_block = "0.0.0.0/0"
 }
 
-resource "aws_route_table_association" "rtb_association_1" {
+resource "aws_route_table_association" "route" {
   route_table_id = aws_route_table.rtb.id
-  subnet_id      = aws_subnet.public_1.id
+  for_each       = aws_subnet.public
+
+  subnet_id = each.value.id
 }
 
-resource "aws_route_table_association" "rtb_association_2" {
-  route_table_id = aws_route_table.rtb.id
-  subnet_id      = aws_subnet.public_2.id
-}
+
 
 resource "aws_network_acl" "nacl" {
   vpc_id = aws_vpc.main.id
@@ -98,7 +75,7 @@ resource "aws_network_acl" "nacl" {
   }
 }
 
-resource "aws_network_acl_rule" "nacl_ingress_rule" {
+resource "aws_network_acl_rule" "ingress_firewall" {
   network_acl_id = aws_network_acl.nacl.id
   rule_number    = 100
   rule_action    = "allow"
@@ -107,7 +84,7 @@ resource "aws_network_acl_rule" "nacl_ingress_rule" {
   cidr_block     = "0.0.0.0/0"
 }
 
-resource "aws_network_acl_rule" "nacl_egress_rule" {
+resource "aws_network_acl_rule" "egress_firewall" {
   network_acl_id = aws_network_acl.nacl.id
   rule_number    = 100
   rule_action    = "allow"
@@ -116,15 +93,12 @@ resource "aws_network_acl_rule" "nacl_egress_rule" {
   cidr_block     = "0.0.0.0/0"
 }
 
-resource "aws_network_acl_association" "pub_1_associaition" {
+resource "aws_network_acl_association" "public_firewall_associaition" {
   network_acl_id = aws_network_acl.nacl.id
-  subnet_id      = aws_subnet.public_1.id
+  for_each       = aws_subnet.public
+  subnet_id      = each.value.id
 }
 
-resource "aws_network_acl_association" "pub_2_associaition" {
-  network_acl_id = aws_network_acl.nacl.id
-  subnet_id      = aws_subnet.public_2.id
-}
 
 
 resource "aws_security_group" "sg" {
@@ -157,6 +131,14 @@ resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
   to_port           = 22
   from_port         = 22
   ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_all_icmp" {
+  security_group_id = aws_security_group.sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "icmp"
+  from_port         = -1
+  to_port           = -1
 }
 
 
