@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block       = "10.0.0.0/16"
+  cidr_block       = var.base_cidr_block
   instance_tenancy = "default"
 
   tags = {
@@ -98,8 +98,6 @@ resource "aws_network_acl_association" "public_firewall_associaition" {
   for_each       = aws_subnet.public
   subnet_id      = each.value.id
 }
-
-
 
 resource "aws_security_group" "sg" {
   vpc_id = aws_vpc.main.id
