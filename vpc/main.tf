@@ -113,6 +113,10 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   to_port           = 80
   from_port         = 80
   ip_protocol       = "tcp"
+
+  tags = {
+    Name = "http"
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_https" {
@@ -121,6 +125,10 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https" {
   to_port           = 443
   from_port         = 443
   ip_protocol       = "tcp"
+
+  tags = {
+    Name = "https"
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
@@ -129,6 +137,10 @@ resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
   to_port           = 22
   from_port         = 22
   ip_protocol       = "tcp"
+
+  tags = {
+    Name = "ssh"
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_all_icmp" {
@@ -137,6 +149,10 @@ resource "aws_vpc_security_group_ingress_rule" "allow_all_icmp" {
   ip_protocol       = "icmp"
   from_port         = -1
   to_port           = -1
+
+  tags = {
+    Name = "icmp"
+  }
 }
 
 
