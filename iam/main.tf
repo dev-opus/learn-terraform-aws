@@ -4,20 +4,20 @@ provider "aws" {
 
 # create group 
 resource "aws_iam_group" "s3_maintainers" {
-  name = "S3Maintainers"
-  path = "/engineering/"
+  name = var.group_name
+  path = var.iam_path
 }
 
 # create user
 resource "aws_iam_user" "maintainer" {
-  name = "bobby"
-  path = "/engineering/"
+  name = var.user_name
+  path = var.iam_path
 }
 
 # create policy
 resource "aws_iam_policy" "custom_s3_read_list" {
-  name = "CustomS3ReadList"
-  path = "/engineering/"
+  name = var.policy_name
+  path = var.iam_path
 
   policy = jsonencode({
     Version = "2012-10-17"
